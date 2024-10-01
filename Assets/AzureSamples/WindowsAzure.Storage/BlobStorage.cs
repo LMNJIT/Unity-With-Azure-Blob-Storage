@@ -49,7 +49,7 @@ public class BlobStorage : BaseStorage
 		// access to the resource. See the documentation links at the top for more information on SAS. The second approach is to set permissions 
 		// to allow public access to blobs in this container. Uncomment the line below to use this approach. Then you can view the image 
 		// using: https://[InsertYourStorageAccountNameHere].blob.core.windows.net/democontainer/HelloWorld.png
-		// await container.SetPermissionsAsync(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
+		await container.SetPermissionsAsync(new BlobContainerPermissions { PublicAccess = BlobContainerPublicAccessType.Blob });
 
 		// Upload a BlockBlob to the newly created container
 		WriteLine("2. Uploading BlockBlob");

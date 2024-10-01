@@ -9,21 +9,56 @@ using Microsoft.WindowsAzure.Storage.Blob;
 
 public class Program : MonoBehaviour
 {
+    private string connectionString;
+    private string blobName;
+
     // Start is called before the first frame update
     void Start()
     {
         Debug.Log("Script runs when cube is rendered.");
+
+        // Find and set up first input field (for connection string)
         GameObject ifieldobj = GameObject.Find("Canvas/param");
         InputField ifield = ifieldobj.GetComponent<InputField>();
-        ifield.onEndEdit.AddListener(ParameterInput);
+        ifield.onEndEdit.AddListener(OnConnectionStringEntered);
 
+        // Find and set up second input field (for blob name or filename)
+        GameObject ifieldobj2 = GameObject.Find("Canvas/param2");
+        InputField ifield2 = ifieldobj2.GetComponent<InputField>();
+        ifield2.onEndEdit.AddListener(OnBlobNameEntered);
     }
 
-    //User enters connection string and hits Return key.
-    public void ParameterInput(string cxnstr)
+    // Capture the connection string when the user enters it
+    public void OnConnectionStringEntered(string cxnstr)
     {
-        Debug.Log(cxnstr);
+        Debug.Log("Connection String Entered: " + cxnstr);
+        connectionString = cxnstr;
 
+        // Once both the connection string and blob name are entered, proceed
+        if (!string.IsNullOrEmpty(connectionString) && !string.IsNullOrEmpty(blobName))
+        {
+            ParameterInput(connectionString, blobName);
+        }
+    }
+
+    // Capture the blob name (e.g., filename) when the user enters it
+    public void OnBlobNameEntered(string blob)
+    {
+        Debug.Log("Blob Name Entered: " + blob);
+        blobName = blob;
+
+        // Once both the connection string and blob name are entered, proceed
+        if (!string.IsNullOrEmpty(connectionString) && !string.IsNullOrEmpty(blobName))
+        {
+            ParameterInput(connectionString, blobName);
+        }
+    }
+
+    // The method that takes both the connection string and the blob name
+    public void ParameterInput(string cxnstr, string blob)
+    {
+        Debug.Log("Using Connection String: " + cxnstr);
+        Debug.Log("Using Blob Name: " + blob);
 
         CloudStorageAccount act = CloudStorageAccount.Parse(cxnstr);
         CloudBlobClient client = act.CreateCloudBlobClient();
@@ -31,36 +66,37 @@ public class Program : MonoBehaviour
         var container = client.GetContainerReference("example");
         container.CreateIfNotExistsAsync().Wait();
 
-        CloudBlockBlob blob = container.GetBlockBlobReference("log.txt");
-        //blob.UploadTextAsync("Unity upload").Wait();
-        appendText(blob, "Unity log: " + System.DateTime.UtcNow.ToString("MM-dd-yyyy hh:mm:ss"));
+        CloudBlockBlob cloudBlob = container.GetBlockBlobReference("log.txt");
+        appendText(cloudBlob, "Unity log: " + System.DateTime.UtcNow.ToString("MM-dd-yyyy hh:mm:ss"));
 
-        downloadDemo(cxnstr);
+        // Call downloadDemo with the blob name
+        downloadDemo(cxnstr, blob);
     }
 
-    public async Task downloadDemo(string cxnstr)
+    public async Task downloadDemo(string cxnstr, string blobName)
     {
-        BlobModel bm = new BlobModel("cat.obj", "example", cxnstr);
+        BlobModel bm = new BlobModel(blobName, "example", cxnstr);
         if (await bm.exists())
         {
-            await bm.download("catmodel.obj"); //you MUST await this, otherwise file can't be imported since it may not be downloaded yet
-            Debug.Log("Downloaded.");
+            await bm.download(blobName); // Download the specified blob
+            Debug.Log("Downloaded " + blobName);
 
             Mesh meshHold = new Mesh();
             ObjImporter newMesh = new ObjImporter();
-            meshHold = newMesh.ImportFile("./Assets/Resources/catmodel.obj");//"./Assets/BlobServerModels/catmodel.obj"); VS ./Assets/Scenes/catmodel.obj
-            Debug.Log("Imported");
+            meshHold = newMesh.ImportFile("./Assets/Resources/" + blobName); // Use the blob name for importing the file
+            Debug.Log("Imported " + blobName);
 
-            GameObject myCat = new GameObject();
-            MeshRenderer meshRenderer = myCat.AddComponent<MeshRenderer>();
-            MeshFilter filter = myCat.AddComponent<MeshFilter>();
+            GameObject myObject = new GameObject();
+            MeshRenderer meshRenderer = myObject.AddComponent<MeshRenderer>();
+            MeshFilter filter = myObject.AddComponent<MeshFilter>();
             filter.mesh = meshHold;
-                                            //./Assets/Resources/metal01.mat
-            Material catMaterial = Resources.Load("metal01", typeof(Material)) as Material;
-            myCat.GetComponent<MeshRenderer>().material = catMaterial;
 
-            Instantiate(myCat);
-            myCat.transform.position = new Vector3(47, -365, -59);
+            // Load material
+            Material objectMaterial = Resources.Load("metal01", typeof(Material)) as Material;
+            myObject.GetComponent<MeshRenderer>().material = objectMaterial;
+
+            Instantiate(myObject);
+            myObject.transform.position = new Vector3(47, -365, -59);
 
             Debug.Log("Done");
         }
@@ -72,13 +108,11 @@ public class Program : MonoBehaviour
 
         if (await blob.ExistsAsync())
         {
-            //append. here we test retrieval & read...
             var content = await blob.DownloadTextAsync();
-
             upload = content + "\n" + v;
         }
 
-        blob.UploadTextAsync(upload).Wait();
+        await blob.UploadTextAsync(upload);
     }
 
     // Update is called once per frame

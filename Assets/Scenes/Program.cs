@@ -17,44 +17,42 @@ public class Program : MonoBehaviour
     {
         Debug.Log("Script runs when cube is rendered.");
 
-        // Find and set up first input field (for connection string)
         GameObject ifieldobj = GameObject.Find("Canvas/param");
         InputField ifield = ifieldobj.GetComponent<InputField>();
         ifield.onEndEdit.AddListener(OnConnectionStringEntered);
 
-        // Find and set up second input field (for blob name or filename)
         GameObject ifieldobj2 = GameObject.Find("Canvas/param2");
         InputField ifield2 = ifieldobj2.GetComponent<InputField>();
         ifield2.onEndEdit.AddListener(OnBlobNameEntered);
     }
 
-    // Capture the connection string when the user enters it
+    //User enters connection string and hits Return key.
     public void OnConnectionStringEntered(string cxnstr)
     {
         Debug.Log("Connection String Entered: " + cxnstr);
         connectionString = cxnstr;
 
-        // Once both the connection string and blob name are entered, proceed
+        //Wait for object name and connection string to be entered before proceeding
         if (!string.IsNullOrEmpty(connectionString) && !string.IsNullOrEmpty(blobName))
         {
             ParameterInput(connectionString, blobName);
         }
     }
 
-    // Capture the blob name (e.g., filename) when the user enters it
+    //User enters blob string and hits Return key
     public void OnBlobNameEntered(string blob)
     {
         Debug.Log("Blob Name Entered: " + blob);
         blobName = blob;
 
-        // Once both the connection string and blob name are entered, proceed
+        //Wait for object name and connection string to be entered before proceeding
         if (!string.IsNullOrEmpty(connectionString) && !string.IsNullOrEmpty(blobName))
         {
             ParameterInput(connectionString, blobName);
         }
     }
 
-    // The method that takes both the connection string and the blob name
+    //Handle the inputs
     public void ParameterInput(string cxnstr, string blob)
     {
         Debug.Log("Using Connection String: " + cxnstr);
@@ -73,6 +71,7 @@ public class Program : MonoBehaviour
         downloadDemo(cxnstr, blob);
     }
 
+    //Search Azure storage for given blobName (object file) and instantiate it
     public async Task downloadDemo(string cxnstr, string blobName)
     {
         BlobModel bm = new BlobModel(blobName, "example", cxnstr);

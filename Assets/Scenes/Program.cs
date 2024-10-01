@@ -77,12 +77,12 @@ public class Program : MonoBehaviour
         BlobModel bm = new BlobModel(blobName, "example", cxnstr);
         if (await bm.exists())
         {
-            await bm.download(blobName); // Download the specified blob
+            await bm.download(blobName); 
             Debug.Log("Downloaded " + blobName);
 
             Mesh meshHold = new Mesh();
             ObjImporter newMesh = new ObjImporter();
-            meshHold = newMesh.ImportFile("./Assets/Resources/" + blobName); // Use the blob name for importing the file
+            meshHold = newMesh.ImportFile("./Assets/Resources/" + blobName); 
             Debug.Log("Imported " + blobName);
 
             GameObject myObject = new GameObject();
